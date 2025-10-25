@@ -10,8 +10,7 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Sangam Kunwar - Portfolio",
-  description: "Professional portfolio of Sangam Kunwar - Full Stack Developer",
-    generator: 'v0.app'
+  description: "Professional portfolio of Sangam Kunwar - Full Stack Developer"
 }
 
 export default function RootLayout({
