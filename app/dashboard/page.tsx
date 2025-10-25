@@ -121,7 +121,7 @@ export default function DashboardPage() {
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Send Message Form */}
           <Card className="lg:col-span-2 p-6">
-            <h2 className="text-2xl font-bold mb-6">Send Message to Sangam</h2>
+            <h2 className="text-2xl font-bold mb-6">Send Message to Sangam Kunwar</h2>
             <form onSubmit={handleSendMessage} className="space-y-4">
               <div>
                 <label className="text-sm font-medium">Subject</label>
