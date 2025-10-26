@@ -11,11 +11,7 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Sangam Kunwar - Portfolio",
   description: "Professional portfolio of Sangam Kunwar - Full Stack Developer",
-  icons: {
-    icon: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/sangamkunwar-photo-enZYerWR8ovFofnT3vLvorXPWGU5X1.jpg",
-  },
 }
-
 
 export default function RootLayout({
   children,
