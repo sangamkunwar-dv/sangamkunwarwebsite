@@ -215,7 +215,7 @@ export default function ContactForm() {
                       GitHub
                     </a>
                     <a
-                      href="https://www.instagram.com/sangam_____war/"
+                      href="https://www.instagram.com/direct/t/sangam_____daji/"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="block text-primary hover:underline"
