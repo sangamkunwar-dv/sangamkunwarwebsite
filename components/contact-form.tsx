@@ -183,7 +183,7 @@ export default function ContactForm() {
 
                 <div>
                   <h4 className="font-semibold text-foreground mb-2">Phone</h4>
-                  <a href="tel:+9701024066" className="text-primary hover:underline">
+                  <a href="https://wa.me/9779701024066?text=Hello%20Sangam,%20I%20want%20to%20connect%20with%20you" className="text-primary hover:underline">
                     +977 9701024066
                   </a>
                 </div>
