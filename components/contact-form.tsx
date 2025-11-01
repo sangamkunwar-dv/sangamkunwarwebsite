@@ -190,7 +190,9 @@ export default function ContactForm() {
 
                 <div>
                   <h4 className="font-semibold text-foreground mb-2">Location</h4>
-                  <p className="text-muted-foreground">Tilottama-8, Rupandehi, Nepal</p>
+                  <a href="https://www.google.com/maps/dir/27.6261518,83.5002453/27.6260489,83.5003698/@27.6258962,83.4973139,811m/data=!3m1!1e3!4m4!4m3!1m1!4e1!1m0?entry=ttu&g_ep=EgoyMDI1MTAyOS4yIKXMDSoASAFQAw%3D%3D" className="text-muted-foreground">
+                    Tilottama-8, Rupandehi, Nepal
+                  </a>
                 </div>
 
                 <div>
