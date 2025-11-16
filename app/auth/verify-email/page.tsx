@@ -58,7 +58,7 @@ export default function VerifyEmailPage() {
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                 </div>
                 <h1 className="text-2xl font-bold">Verifying Email</h1>
-                <p className="text-muted-foreground mt-2">Please wait while we verify your email...</p>
+                <p className="text-muted-foreground mt-2">Please look in your email inbox for verify...</p>
               </>
             )}
 
