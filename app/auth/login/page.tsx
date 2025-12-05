@@ -24,13 +24,31 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/dashboard`, // After successful login
+        redirectTo: `${window.location.origin}/dashboard`,
       },
     })
 
     if (error) {
       toast({
         title: "Google Login Failed",
+        description: error.message,
+        variant: "destructive",
+      })
+    }
+  }
+
+  // ⭐ GITHUB LOGIN FUNCTION
+  const handleGithubLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "github",
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    })
+
+    if (error) {
+      toast({
+        title: "GitHub Login Failed",
         description: error.message,
         variant: "destructive",
       })
@@ -153,6 +171,20 @@ export default function LoginPage() {
               className="w-5 h-5"
             />
             Continue with Google
+          </Button>
+
+          {/* ⭐ GITHUB LOGIN BUTTON */}
+          <Button
+            variant="outline"
+            className="w-full flex items-center gap-2 mt-2"
+            onClick={handleGithubLogin}
+          >
+            <img
+              src="https://cdn-icons-png.flaticon.com/512/25/25231.png"
+              alt="GitHub"
+              className="w-5 h-5"
+            />
+            Continue with GitHub
           </Button>
 
           <div className="text-center text-sm pt-2">

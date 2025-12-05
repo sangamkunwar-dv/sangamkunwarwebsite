@@ -187,7 +187,7 @@ export default function SignupPage() {
             onClick={handleGithubSignup}
           >
             <img
-              src="https://www.svgrepo.com/show/448231/github.svg"
+              src="https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/github.svg"
               alt="GitHub"
               className="w-5 h-5"
             />
