@@ -20,6 +20,43 @@ export default function SignupPage() {
   const { toast } = useToast()
   const supabase = createClient()
 
+  // ⭐ GOOGLE SIGNUP
+  const handleGoogleSignup = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    })
+
+    if (error) {
+      toast({
+        title: "Google Sign Up Failed",
+        description: error.message,
+        variant: "destructive",
+      })
+    }
+  }
+
+  // ⭐ GITHUB SIGNUP (NEW)
+  const handleGithubSignup = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "github",
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    })
+
+    if (error) {
+      toast({
+        title: "GitHub Sign Up Failed",
+        description: error.message,
+        variant: "destructive",
+      })
+    }
+  }
+
+  // ⭐ EMAIL SIGNUP
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -50,7 +87,6 @@ export default function SignupPage() {
         router.push("/auth/verify-email")
       }
     } catch (err) {
-      console.error("[v0] Signup error:", err)
       toast({
         title: "Error",
         description: "An error occurred during signup",
@@ -78,6 +114,7 @@ export default function SignupPage() {
             <p className="text-muted-foreground mt-2">Join to send me messages</p>
           </div>
 
+          {/* EMAIL SIGNUP */}
           <form onSubmit={handleSignup} className="space-y-4">
             <div>
               <label className="text-sm font-medium">Full Name</label>
@@ -117,7 +154,45 @@ export default function SignupPage() {
             </Button>
           </form>
 
-          <div className="text-center text-sm">
+          {/* DIVIDER */}
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">or</span>
+            </div>
+          </div>
+
+          {/* GOOGLE BUTTON */}
+          <Button
+            variant="outline"
+            className="w-full flex items-center gap-2"
+            onClick={handleGoogleSignup}
+          >
+            <img
+              src="https://www.svgrepo.com/show/475656/google-color.svg"
+              alt="Google"
+              className="w-5 h-5"
+            />
+            Continue with Google
+          </Button>
+
+          {/* GITHUB BUTTON (NEW) */}
+          <Button
+            variant="outline"
+            className="w-full flex items-center gap-2"
+            onClick={handleGithubSignup}
+          >
+            <img
+              src="https://www.svgrepo.com/show/512317/github-142.svg"
+              alt="GitHub"
+              className="w-5 h-5"
+            />
+            Continue with GitHub
+          </Button>
+
+          <div className="text-center text-sm pt-2">
             <p className="text-muted-foreground">
               Already have an account?{" "}
               <Link href="/auth/login" className="text-primary hover:underline font-medium">
