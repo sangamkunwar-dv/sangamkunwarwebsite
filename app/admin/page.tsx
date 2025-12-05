@@ -56,10 +56,7 @@ export default function AdminPage() {
 
     try {
       if (isSignup) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-        })
+        const { error } = await supabase.auth.signUp({ email, password })
         if (error) throw error
         toast({
           title: "Success",
@@ -69,25 +66,31 @@ export default function AdminPage() {
         setEmail("")
         setPassword("")
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
+        const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
-        toast({
-          title: "Success",
-          description: "Logged in successfully",
-        })
+        toast({ title: "Success", description: "Logged in successfully" })
       }
     } catch (err: any) {
       const errorMsg = err.message || "Authentication failed. Please check your Supabase credentials."
       setError(errorMsg)
-      toast({
-        title: "Error",
-        description: errorMsg,
-        variant: "destructive",
-      })
+      toast({ title: "Error", description: errorMsg, variant: "destructive" })
     } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleOAuthLogin = async (provider: "google" | "github") => {
+    setLoading(true)
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: `${window.location.origin}/admin` },
+      })
+      if (error) throw error
+    } catch (err: any) {
+      const errorMsg = err.message || `OAuth login with ${provider} failed.`
+      setError(errorMsg)
+      toast({ title: "Error", description: errorMsg, variant: "destructive" })
       setLoading(false)
     }
   }
@@ -121,44 +124,26 @@ export default function AdminPage() {
           <p className="text-sm text-muted-foreground mb-6">
             {isSignup ? "Set up your admin account" : "Sign in to manage your portfolio"}
           </p>
-          {error && (
-            <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded text-sm text-destructive">
-              {error}
-            </div>
-          )}
+          {error && <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded text-sm text-destructive">{error}</div>}
+
+          {/* Email/Password Form */}
           <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Email</label>
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@example.com"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Password</label>
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-              />
-            </div>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@example.com" required />
+            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Loading..." : isSignup ? "Create Account" : "Sign In"}
             </Button>
           </form>
+
+          {/* OAuth Buttons */}
+          <div className="mt-4 flex flex-col gap-2">
+            <Button variant="outline" onClick={() => handleOAuthLogin("google")}>Continue with Google</Button>
+            <Button variant="outline" onClick={() => handleOAuthLogin("github")}>Continue with GitHub</Button>
+          </div>
+
           <div className="mt-4 text-center text-sm">
             <button
-              onClick={() => {
-                setIsSignup(!isSignup)
-                setEmail("")
-                setPassword("")
-                setError("")
-              }}
+              onClick={() => { setIsSignup(!isSignup); setEmail(""); setPassword(""); setError("") }}
               className="text-primary hover:underline"
             >
               {isSignup ? "Already have an account? Sign in" : "Need an account? Sign up"}
@@ -172,7 +157,6 @@ export default function AdminPage() {
   return (
     <div className="flex h-screen bg-background">
       <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleLogout} />
-
       <main className="flex-1 overflow-auto">
         <div className="p-8">
           {activeTab === "overview" && <DashboardOverview />}
