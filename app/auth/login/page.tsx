@@ -19,6 +19,25 @@ export default function LoginPage() {
   const { toast } = useToast()
   const supabase = createClient()
 
+  // ⭐ GOOGLE LOGIN FUNCTION
+  const handleGoogleLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`, // After successful login
+      },
+    })
+
+    if (error) {
+      toast({
+        title: "Google Login Failed",
+        description: error.message,
+        variant: "destructive",
+      })
+    }
+  }
+
+  // ⭐ EMAIL + PASSWORD LOGIN
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -41,10 +60,9 @@ export default function LoginPage() {
       if (signInData.user && !signInData.user.email_confirmed_at) {
         toast({
           title: "Email Not Verified",
-          description: "Please verify your email before logging in. Check your inbox for the verification link.",
+          description: "Please verify your email before logging in.",
           variant: "destructive",
         })
-        // Sign out the user since email is not verified
         await supabase.auth.signOut()
         return
       }
@@ -53,9 +71,10 @@ export default function LoginPage() {
         title: "Success",
         description: "Logged in successfully",
       })
+
       router.push("/dashboard")
     } catch (err) {
-      console.error("[v0] Login error:", err)
+      console.error("[Login Error]:", err)
       toast({
         title: "Error",
         description: "An error occurred during login",
@@ -83,6 +102,7 @@ export default function LoginPage() {
             <p className="text-muted-foreground mt-2">Sign in to your account</p>
           </div>
 
+          {/* ⭐ EMAIL LOGIN FORM */}
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="text-sm font-medium">Email</label>
@@ -111,7 +131,31 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="text-center text-sm">
+          {/* ⭐ DIVIDER */}
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">or</span>
+            </div>
+          </div>
+
+          {/* ⭐ GOOGLE LOGIN BUTTON */}
+          <Button
+            variant="outline"
+            className="w-full flex items-center gap-2"
+            onClick={handleGoogleLogin}
+          >
+            <img
+              src="https://www.svgrepo.com/show/475656/google-color.svg"
+              alt="Google"
+              className="w-5 h-5"
+            />
+            Continue with Google
+          </Button>
+
+          <div className="text-center text-sm pt-2">
             <p className="text-muted-foreground">
               Don't have an account?{" "}
               <Link href="/auth/signup" className="text-primary hover:underline font-medium">
