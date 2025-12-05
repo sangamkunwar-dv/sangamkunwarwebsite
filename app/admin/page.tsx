@@ -30,6 +30,8 @@ export default function AdminPage() {
   const { toast } = useToast()
   const supabase = createClient()
 
+  const ADMIN_EMAIL = "sangamkunwar48@gmail.com" // Only this email can access admin
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -38,7 +40,13 @@ export default function AdminPage() {
         } = await supabase.auth.getSession()
 
         if (session) {
-          setUser(session.user)
+          // Only allow admin email
+          if (session.user.email !== ADMIN_EMAIL) {
+            await supabase.auth.signOut()
+            setError("Access denied: You are not authorized as admin.")
+          } else {
+            setUser(session.user)
+          }
         }
       } catch (err) {
         console.log("[v0] Auth check failed - using local auth")
@@ -68,7 +76,20 @@ export default function AdminPage() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
-        toast({ title: "Success", description: "Logged in successfully" })
+
+        // Check if email matches admin email
+        if (email !== ADMIN_EMAIL) {
+          await supabase.auth.signOut()
+          setError("Access denied: You are not authorized as admin.")
+          toast({
+            title: "Error",
+            description: "Only the admin email can login.",
+            variant: "destructive",
+          })
+        } else {
+          setUser({ email })
+          toast({ title: "Success", description: "Logged in successfully" })
+        }
       }
     } catch (err: any) {
       const errorMsg = err.message || "Authentication failed. Please check your Supabase credentials."
@@ -87,6 +108,24 @@ export default function AdminPage() {
         options: { redirectTo: `${window.location.origin}/admin` },
       })
       if (error) throw error
+
+      // Listen for auth state change
+      supabase.auth.onAuthStateChange(async (event, session) => {
+        if (session && session.user.email) {
+          if (session.user.email !== ADMIN_EMAIL) {
+            await supabase.auth.signOut()
+            setError("Access denied: This account is not authorized as admin.")
+            toast({
+              title: "Error",
+              description: "Access denied: This account is not authorized.",
+              variant: "destructive",
+            })
+          } else {
+            setUser(session.user)
+            toast({ title: "Success", description: "Logged in successfully as admin." })
+          }
+        }
+      })
     } catch (err: any) {
       const errorMsg = err.message || `OAuth login with ${provider} failed.`
       setError(errorMsg)
