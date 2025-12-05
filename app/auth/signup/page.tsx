@@ -1,10 +1,9 @@
 "use client"
 
-import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { createClient } from "@/lib/supabase/client"
+import { supabase } from "@/lib/supabase/client" // Make sure this file exports a Supabase client
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
@@ -18,45 +17,8 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
-  const supabase = createClient()
 
-  // ⭐ GOOGLE SIGNUP
-  const handleGoogleSignup = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`,
-      },
-    })
-
-    if (error) {
-      toast({
-        title: "Google Sign Up Failed",
-        description: error.message,
-        variant: "destructive",
-      })
-    }
-  }
-
-  // ⭐ GITHUB SIGNUP (NEW)
-  const handleGithubSignup = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "github",
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`,
-      },
-    })
-
-    if (error) {
-      toast({
-        title: "GitHub Sign Up Failed",
-        description: error.message,
-        variant: "destructive",
-      })
-    }
-  }
-
-  // ⭐ EMAIL SIGNUP
+  // ===================== EMAIL SIGNUP =====================
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -66,35 +28,53 @@ export default function SignupPage() {
         email,
         password,
         options: {
-          data: {
-            full_name: fullName,
-          },
-          emailRedirectTo: `${window.location.origin}/auth/verify-email`,
+          data: { full_name: fullName },
+          emailRedirectTo: `${window.location.origin}/auth/verify-email`, // Redirect after email verification
         },
       })
 
-      if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        })
-      } else if (data.user) {
-        toast({
-          title: "Success",
-          description: "Account created! Check your email to verify your account.",
-        })
-        router.push("/auth/verify-email")
-      }
-    } catch (err) {
+      if (error) throw error
+
       toast({
-        title: "Error",
-        description: "An error occurred during signup",
-        variant: "destructive",
+        title: "Success",
+        description: "Account created! Check your email to verify your account.",
       })
+      router.push("/auth/verify-email")
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" })
     } finally {
       setLoading(false)
     }
+  }
+
+  // ===================== GOOGLE LOGIN =====================
+  const handleGoogleSignup = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/dashboard` },
+    })
+
+    if (error)
+      toast({
+        title: "Google Signup Failed",
+        description: error.message,
+        variant: "destructive",
+      })
+  }
+
+  // ===================== GITHUB LOGIN =====================
+  const handleGithubSignup = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "github",
+      options: { redirectTo: `${window.location.origin}/dashboard` },
+    })
+
+    if (error)
+      toast({
+        title: "GitHub Signup Failed",
+        description: error.message,
+        variant: "destructive",
+      })
   }
 
   return (
@@ -105,8 +85,7 @@ export default function SignupPage() {
             href="/"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Back to home
+            <ArrowLeft className="w-4 h-4" /> Back to home
           </Link>
 
           <div className="text-center">
@@ -114,47 +93,35 @@ export default function SignupPage() {
             <p className="text-muted-foreground mt-2">Join to send me messages</p>
           </div>
 
-          {/* EMAIL SIGNUP */}
+          {/* ===================== EMAIL FORM ===================== */}
           <form onSubmit={handleSignup} className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Full Name</label>
-              <Input
-                type="text"
-                placeholder="Your name"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">Email</label>
-              <Input
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">Password</label>
-              <Input
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-
+            <Input
+              type="text"
+              placeholder="Full Name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+            />
+            <Input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <Input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating account..." : "Sign Up"}
+              {loading ? "Creating..." : "Sign Up"}
             </Button>
           </form>
 
-          {/* DIVIDER */}
+          {/* ===================== DIVIDER ===================== */}
           <div className="relative my-4">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
@@ -164,7 +131,7 @@ export default function SignupPage() {
             </div>
           </div>
 
-          {/* GOOGLE BUTTON */}
+          {/* ===================== GOOGLE BUTTON ===================== */}
           <Button
             variant="outline"
             className="w-full flex items-center gap-2"
@@ -178,7 +145,7 @@ export default function SignupPage() {
             Continue with Google
           </Button>
 
-          {/* GITHUB BUTTON (NEW) */}
+          {/* ===================== GITHUB BUTTON ===================== */}
           <Button
             variant="outline"
             className="w-full flex items-center gap-2"
