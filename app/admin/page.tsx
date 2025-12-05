@@ -3,6 +3,7 @@
 import type React from "react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { createClient } from "@/lib/supabase/client"
 import AdminSidebar from "@/components/admin/sidebar"
 import ProjectsManager from "@/components/admin/projects-manager"
@@ -174,10 +175,25 @@ export default function AdminPage() {
             </Button>
           </form>
 
-          {/* OAuth Buttons */}
+          {/* OAuth Buttons with Logos */}
           <div className="mt-4 flex flex-col gap-2">
-            <Button variant="outline" onClick={() => handleOAuthLogin("google")}>Continue with Google</Button>
-            <Button variant="outline" onClick={() => handleOAuthLogin("github")}>Continue with GitHub</Button>
+            <Button
+              variant="outline"
+              className="flex items-center justify-center gap-2"
+              onClick={() => handleOAuthLogin("google")}
+            >
+              <Image src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width={20} height={20} />
+              Continue with Google
+            </Button>
+
+            <Button
+              variant="outline"
+              className="flex items-center justify-center gap-2"
+              onClick={() => handleOAuthLogin("github")}
+            >
+              <Image src="https://cdn-icons-png.flaticon.com/512/25/25231.png" alt="GitHub" width={20} height={20} />
+              Continue with GitHub
+            </Button>
           </div>
 
           <div className="mt-4 text-center text-sm">
