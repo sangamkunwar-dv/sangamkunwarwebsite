@@ -16,6 +16,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState("")
   const [fullName, setFullName] = useState("")
   const [loading, setLoading] = useState(false)
+
   const router = useRouter()
   const { toast } = useToast()
   const supabase = createClient()
@@ -32,6 +33,24 @@ export default function SignupPage() {
     if (error) {
       toast({
         title: "Google Sign Up Failed",
+        description: error.message,
+        variant: "destructive",
+      })
+    }
+  }
+
+  // ⭐ GITHUB SIGNUP / LOGIN
+  const handleGithubSignup = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "github",
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    })
+
+    if (error) {
+      toast({
+        title: "GitHub Sign Up Failed",
         description: error.message,
         variant: "destructive",
       })
@@ -143,11 +162,11 @@ export default function SignupPage() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">or</span>
+              <span className="bg-background px-2 text-muted-foreground">or continue with</span>
             </div>
           </div>
 
-          {/* ⭐ GOOGLE SIGNUP BUTTON */}
+          {/* ⭐ GOOGLE BUTTON */}
           <Button
             variant="outline"
             className="w-full flex items-center gap-2"
@@ -159,6 +178,20 @@ export default function SignupPage() {
               className="w-5 h-5"
             />
             Continue with Google
+          </Button>
+
+          {/* ⭐ GITHUB BUTTON */}
+          <Button
+            variant="outline"
+            className="w-full flex items-center gap-2 mt-2"
+            onClick={handleGithubSignup}
+          >
+            <img
+              src="https://www.svgrepo.com/show/448231/github.svg"
+              alt="GitHub"
+              className="w-5 h-5"
+            />
+            Continue with GitHub
           </Button>
 
           <div className="text-center text-sm pt-2">
