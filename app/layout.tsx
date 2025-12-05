@@ -5,16 +5,20 @@ import { Analytics } from "@vercel/analytics/next"
 import { ThemeProvider } from "@/components/theme-provider"
 import "./globals.css"
 
-
-
-
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Sangam Kunwar - Portfolio",
-  description: " It's me Sangam Kunwar - Full Stack Developer",
-    generator: 'sangamkunwar'
+  description: "It's me Sangam Kunwar - Full Stack Developer",
+  generator: "sangamkunwar",
+
+
+  icons: {
+    icon: "/favicon.ico",         
+    shortcut: "/favicon.ico",
+    apple: "public\sangamkunwarphoto.jpeg",
+  },
 }
 
 export default function RootLayout({
@@ -24,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`font-sans antialiased`}>
+      <body className="font-sans antialiased">
         <ThemeProvider>{children}</ThemeProvider>
         <Analytics />
       </body>
