@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico",         
     shortcut: "/favicon.ico",
-    apple: "public\sangamkunwarphoto.jpeg",
+    apple: "https://sangamkunwar.netlify.app/sangamkunwarphoto.jpeg",
   },
 }
 
