@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 
-// Store messages in memory (for demo - use database in production)
+// Store messages in memory (demo only, use DB in production)
 let messages: any[] = []
 
 export async function POST(request: NextRequest) {
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    // Store message with consistent timestamp field
+    // Store message with consistent timestamp
     const newMessage = {
       id: Date.now().toString(),
       name,
@@ -26,58 +26,52 @@ export async function POST(request: NextRequest) {
 
     messages.push(newMessage)
 
+    // Email configuration
     const adminEmail = process.env.ADMIN_EMAIL || "sangamkunwae48@gmail.com"
-    const resendApiKey = process.env.RESEND_API_KEY
+    const resendApiKey = process.env.RESEND_API_KEY || "re_fvxZHiHt_7EzQJkkKCaiFj3txkDBMydb8"
     const fromEmail = process.env.RESEND_FROM_EMAIL || "noreply@sangamkunwar.com"
 
-    if (resendApiKey) {
-      try {
-        const response = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${resendApiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: fromEmail,
-            to: adminEmail,
-            subject: `New Contact: ${subject}`,
-            html: `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #333;">New Contact Form Submission</h2>
-                <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
-                
-                <p><strong>Name:</strong> ${name}</p>
-                <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
-                <p><strong>Subject:</strong> ${subject}</p>
-                
-                <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
-                <h3 style="color: #333;">Message:</h3>
-                <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; white-space: pre-wrap;">
-                  ${message.replace(/</g, "&lt;").replace(/>/g, "&gt;")}
-                </div>
-                
-                <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
-                <p style="color: #999; font-size: 12px;">
-                  Submitted at: ${new Date().toLocaleString()}
-                </p>
+    // Send email via Resend
+    try {
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${resendApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: fromEmail,
+          to: adminEmail,
+          subject: `New Contact: ${subject}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #333;">New Contact Form Submission</h2>
+              <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+              <p><strong>Name:</strong> ${name}</p>
+              <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
+              <p><strong>Subject:</strong> ${subject}</p>
+              <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+              <h3 style="color: #333;">Message:</h3>
+              <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; white-space: pre-wrap;">
+                ${message.replace(/</g, "&lt;").replace(/>/g, "&gt;")}
               </div>
-            `,
-          }),
-        })
+              <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+              <p style="color: #999; font-size: 12px;">
+                Submitted at: ${new Date().toLocaleString()}
+              </p>
+            </div>
+          `,
+        }),
+      })
 
-        if (!response.ok) {
-          const errorText = await response.text()
-          console.error("[v0] Resend error:", errorText)
-        } else {
-          console.log("[v0] Email sent successfully to", adminEmail)
-        }
-      } catch (emailError) {
-        console.error("[v0] Email sending failed:", emailError)
-        // Don't fail the request if email fails
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error("[v1] Resend error:", errorText)
+      } else {
+        console.log("[v1] Email sent successfully to", adminEmail)
       }
-    } else {
-      console.warn("[v0] RESEND_API_KEY not configured. Email not sent.")
+    } catch (emailError) {
+      console.error("[v1] Email sending failed:", emailError)
     }
 
     return NextResponse.json(
@@ -86,18 +80,20 @@ export async function POST(request: NextRequest) {
         message: "Message sent successfully",
         id: newMessage.id,
       },
-      { status: 200 },
+      { status: 200 }
     )
   } catch (error) {
-    console.error("[v0] Contact API error:", error)
+    console.error("[v1] Contact API error:", error)
     return NextResponse.json({ error: "Failed to process message" }, { status: 500 })
   }
 }
 
+// Return all messages
 export async function GET() {
   return NextResponse.json({ messages })
 }
 
+// Delete a message by ID
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -108,10 +104,9 @@ export async function DELETE(request: NextRequest) {
     }
 
     messages = messages.filter((msg) => msg.id !== id)
-
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[v0] Delete error:", error)
+    console.error("[v1] Delete error:", error)
     return NextResponse.json({ error: "Failed to delete message" }, { status: 500 })
   }
 }
