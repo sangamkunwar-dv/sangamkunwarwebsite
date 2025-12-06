@@ -9,13 +9,13 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Sangam Kunwar - Portfolio",
+  title: "Sangam Kunwar - Full Stack Developer",
   description: "It's me Sangam Kunwar - Full Stack Developer",
   generator: "sangamkunwar",
   icons: {
-    icon: "/sangamkunwarphoto.png",        // favicon for browser tab
-    shortcut: "/sangamkunwarphoto.png",    // shortcut icon
-    apple: "/sangamkunwarphoto.png",       // apple touch icon
+    icon: "/sangamkunwarphoto.png",       
+    shortcut: "/sangamkunwarphoto.png",    
+    apple: "/sangamkunwarphoto.png",       
   },
 };
 
