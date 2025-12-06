@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
@@ -33,7 +31,7 @@ export default function DashboardPage() {
         router.push("/auth/login")
       } else {
         setUser(session.user)
-        fetchMessages(session.user.id)
+        fetchMessages()
       }
       setLoading(false)
     }
@@ -41,19 +39,22 @@ export default function DashboardPage() {
     checkAuth()
   }, [])
 
-  const fetchMessages = async (userId: string) => {
-    const { data } = await supabase
-      .from("messages")
-      .select("*")
-      .eq("sender_id", userId)
-      .order("created_at", { ascending: false })
-
-    setMessages(data || [])
+  // Fetch messages from your route.tsx GET API
+  const fetchMessages = async () => {
+    try {
+      const res = await fetch("/api/contact")
+      const data = await res.json()
+      setMessages(data.messages || [])
+    } catch (error) {
+      console.error("Failed to load messages", error)
+    }
   }
 
+  // Send message using Resend API (route.tsx)
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!message.trim() || !subject.trim()) {
+
+    if (!subject.trim() || !message.trim()) {
       toast({
         title: "Error",
         description: "Please fill in all fields",
@@ -65,29 +66,39 @@ export default function DashboardPage() {
     setSending(true)
 
     try {
-      const { error } = await supabase.from("messages").insert([
-        {
-          sender_id: user.id,
-          sender_email: user.email,
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: user.email,
+          email: user.email,
           subject,
           message,
-          status: "pending",
-        },
-      ])
-
-      if (error) throw error
-
-      toast({
-        title: "Success",
-        description: "Message sent successfully",
+        }),
       })
-      setMessage("")
-      setSubject("")
-      fetchMessages(user.id)
-    } catch (err: any) {
+
+      const result = await res.json()
+
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: "Message sent successfully!",
+        })
+
+        setSubject("")
+        setMessage("")
+        fetchMessages()
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to send message",
+          variant: "destructive",
+        })
+      }
+    } catch (err) {
       toast({
         title: "Error",
-        description: err.message,
+        description: "Something went wrong",
         variant: "destructive",
       })
     } finally {
@@ -160,10 +171,10 @@ export default function DashboardPage() {
                 messages.map((msg) => (
                   <div key={msg.id} className="p-3 bg-muted rounded-lg">
                     <p className="text-sm font-medium">{msg.subject}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{msg.email}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Status: <span className="capitalize">{msg.status}</span>
+                      {new Date(msg.timestamp).toLocaleString()}
                     </p>
-                    <p className="text-xs text-muted-foreground">{new Date(msg.created_at).toLocaleDateString()}</p>
                   </div>
                 ))
               )}
