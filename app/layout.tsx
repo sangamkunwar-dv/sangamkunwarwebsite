@@ -1,37 +1,44 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
-import { Analytics } from "@vercel/analytics/next"
-import { ThemeProvider } from "@/components/theme-provider"
-import "./globals.css"
+import type React from "react";
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
+import { ThemeProvider } from "@/components/theme-provider";
+import "./globals.css";
 
-const _geist = Geist({ subsets: ["latin"] })
-const _geistMono = Geist_Mono({ subsets: ["latin"] })
+const _geist = Geist({ subsets: ["latin"] });
+const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Sangam Kunwar - Portfolio",
   description: "It's me Sangam Kunwar - Full Stack Developer",
   generator: "sangamkunwar",
 
-
   icons: {
-    icon: "/favicon.ico",         
-    shortcut: "/favicon.ico",
-    apple: "public\sangamkunwarphoto.jpeg",
+    icon: "/favicon.ico",          // favicon for browsers
+    shortcut: "/favicon.ico",      // shortcut icon
+    apple: "/sangamkunwarphoto.jpeg", // apple touch icon
   },
-}
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Optional: For Apple touch icon */}
+        <link
+          rel="apple-touch-icon"
+          sizes="180x180"
+          href="/sangamkunwarphoto.jpeg"
+        />
+      </head>
       <body className="font-sans antialiased">
         <ThemeProvider>{children}</ThemeProvider>
         <Analytics />
       </body>
     </html>
-  )
+  );
 }
