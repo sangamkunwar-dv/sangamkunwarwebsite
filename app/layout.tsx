@@ -13,9 +13,9 @@ export const metadata: Metadata = {
   description: "It's me Sangam Kunwar - Full Stack Developer",
   generator: "sangamkunwar",
   icons: {
-    icon: "/sangamkunwarphoto.png",       
-    shortcut: "/sangamkunwarphoto.png",    
-    apple: "/sangamkunwarphoto.png",       
+    icon: "/sangamkunwarphotos.png",       
+    shortcut: "/sangamkunwarphotos.png",    
+    apple: "/sangamkunwarphotos.png",       
   },
 };
 
