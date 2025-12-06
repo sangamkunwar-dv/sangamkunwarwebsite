@@ -12,13 +12,13 @@ export const metadata: Metadata = {
   title: "Sangam Kunwar - Portfolio",
   description: "It's me Sangam Kunwar - Full Stack Developer",
   generator: "sangamkunwar",
-
   icons: {
-    icon: "/favicon.ico",          // favicon for browsers
-    shortcut: "/favicon.ico",      // shortcut icon
-    apple: "/sangamkunwarphoto.jpeg", // apple touch icon
+    icon: "/sangamkunwarphoto.png",        // favicon for browser tab
+    shortcut: "/sangamkunwarphoto.png",    // shortcut icon
+    apple: "/sangamkunwarphoto.png",       // apple touch icon
   },
 };
+
 
 export default function RootLayout({
   children,
