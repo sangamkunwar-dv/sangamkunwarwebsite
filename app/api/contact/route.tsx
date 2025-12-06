@@ -1,20 +1,28 @@
 import { type NextRequest, NextResponse } from "next/server"
 
-// Store messages in memory (demo only, use DB in production)
-let messages: any[] = []
+interface Message {
+  id: string
+  name: string
+  email: string
+  subject: string
+  message: string
+  timestamp: string
+  read: boolean
+}
 
-export async function POST(request: NextRequest) {
+// In-memory messages storage (demo only)
+let messages: Message[] = []
+
+export async function POST(req: NextRequest) {
   try {
-    const body = await request.json()
+    const body = await req.json()
     const { name, email, subject, message } = body
 
-    // Validate required fields
     if (!name || !email || !subject || !message) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+      return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 })
     }
 
-    // Store message with consistent timestamp
-    const newMessage = {
+    const newMessage: Message = {
       id: Date.now().toString(),
       name,
       email,
@@ -26,7 +34,6 @@ export async function POST(request: NextRequest) {
 
     messages.push(newMessage)
 
-    // Email configuration
     const adminEmail = process.env.ADMIN_EMAIL || "sangamkunwae48@gmail.com"
     const resendApiKey = process.env.RESEND_API_KEY || "re_fvxZHiHt_7EzQJkkKCaiFj3txkDBMydb8"
     const fromEmail = process.env.RESEND_FROM_EMAIL || "noreply@sangamkunwar.com"
@@ -66,47 +73,40 @@ export async function POST(request: NextRequest) {
 
       if (!response.ok) {
         const errorText = await response.text()
-        console.error("[v1] Resend error:", errorText)
+        console.error("Resend API error:", errorText)
       } else {
-        console.log("[v1] Email sent successfully to", adminEmail)
+        console.log("Email sent successfully to", adminEmail)
       }
     } catch (emailError) {
-      console.error("[v1] Email sending failed:", emailError)
+      console.error("Email sending failed:", emailError)
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Message sent successfully",
-        id: newMessage.id,
-      },
-      { status: 200 }
-    )
+    return NextResponse.json({ success: true, message: "Message sent successfully", id: newMessage.id }, { status: 200 })
   } catch (error) {
-    console.error("[v1] Contact API error:", error)
-    return NextResponse.json({ error: "Failed to process message" }, { status: 500 })
+    console.error("Contact API error:", error)
+    return NextResponse.json({ success: false, error: "Failed to process message" }, { status: 500 })
   }
 }
 
-// Return all messages
+// GET all messages (for admin)
 export async function GET() {
-  return NextResponse.json({ messages })
+  return NextResponse.json({ success: true, messages })
 }
 
-// Delete a message by ID
-export async function DELETE(request: NextRequest) {
+// DELETE message by ID
+export async function DELETE(req: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
+    const { searchParams } = new URL(req.url)
     const id = searchParams.get("id")
 
     if (!id) {
-      return NextResponse.json({ error: "Message ID required" }, { status: 400 })
+      return NextResponse.json({ success: false, error: "Message ID required" }, { status: 400 })
     }
 
     messages = messages.filter((msg) => msg.id !== id)
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[v1] Delete error:", error)
-    return NextResponse.json({ error: "Failed to delete message" }, { status: 500 })
+    console.error("Delete error:", error)
+    return NextResponse.json({ success: false, error: "Failed to delete message" }, { status: 500 })
   }
 }

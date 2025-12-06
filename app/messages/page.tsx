@@ -51,6 +51,7 @@ export default function MessagesPage() {
           <p className="text-muted-foreground mt-2">Connect with Sangam Kunwar</p>
         </div>
 
+        {/* Contact Form */}
         <form onSubmit={handleSubmit} className="space-y-4 text-left">
           <input
             type="text"
@@ -88,12 +89,22 @@ export default function MessagesPage() {
             className="w-full border p-2 rounded"
           />
           <Button type="submit" className="w-full">
-            Send Message
+            {status === "Sending..." ? "Sending..." : "Send Message"}
           </Button>
         </form>
 
-        {status && <p className="text-sm text-muted-foreground mt-2">{status}</p>}
+        {/* Status Message */}
+        {status && (
+          <p
+            className={`text-sm mt-2 ${
+              status.includes("successfully") ? "text-green-600" : "text-red-600"
+            }`}
+          >
+            {status}
+          </p>
+        )}
 
+        {/* Signup/Login Links */}
         <p className="text-muted-foreground mt-4">Or create an account / login to stay connected:</p>
 
         <div className="space-y-3 mt-2">
