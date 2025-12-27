@@ -43,46 +43,69 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
+      console.log("[v0] Attempting login for:", email)
+      
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (signInError) {
+        console.error("[v0] Login error:", signInError)
         toast({
-          title: "Error",
+          title: "Login Failed",
           description: signInError.message,
           variant: "destructive",
         })
         return
       }
 
-      if (signInData.user && !signInData.user.email_confirmed_at) {
+      if (!signInData.user) {
+        toast({
+          title: "Login Failed",
+          description: "No user data returned",
+          variant: "destructive",
+        })
+        return
+      }
+
+      console.log("[v0] Login successful for:", signInData.user.email)
+      console.log("[v0] Email verified:", !!signInData.user.email_confirmed_at)
+
+      // Check if email is verified
+      if (!signInData.user.email_confirmed_at) {
         toast({
           title: "Email Not Verified",
           description: "Please verify your email before logging in. Check your inbox for the verification link.",
           variant: "destructive",
         })
-        // Sign out the user since email is not verified
         await supabase.auth.signOut()
         return
       }
 
       toast({
         title: "Success",
-        description: "Logged in successfully",
+        description: "Logged in successfully! Redirecting...",
       })
 
-      if (email === "sangamkunwar48@gmail.com") {
-        router.push("/admin")
-      } else {
-        router.push("/dashboard")
-      }
+      // Redirect based on email
+      setTimeout(() => {
+        if (email === "sangamkunwar48@gmail.com") {
+          console.log("[v0] Redirecting to admin panel")
+          router.push("/admin")
+          router.refresh()
+        } else {
+          console.log("[v0] Redirecting to dashboard")
+          router.push("/dashboard")
+          router.refresh()
+        }
+      }, 500)
+      
     } catch (err) {
-      console.error("[v0] Login error:", err)
+      console.error("[v0] Unexpected login error:", err)
       toast({
         title: "Error",
-        description: "An error occurred during login",
+        description: "An unexpected error occurred during login",
         variant: "destructive",
       })
     } finally {

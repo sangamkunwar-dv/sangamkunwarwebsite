@@ -28,14 +28,18 @@ export default function AdminPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        console.log("[v0] Checking admin authentication...")
         const {
           data: { session },
         } = await supabase.auth.getSession()
 
         if (session) {
+          console.log("[v0] Session found:", session.user.email)
           if (session.user.email === ADMIN_EMAIL) {
+            console.log("[v0] Admin access granted")
             setUser(session.user)
           } else {
+            console.warn("[v0] Non-admin user attempted to access admin panel:", session.user.email)
             toast({
               title: "Access Denied",
               description: "You do not have administrative privileges.",
@@ -44,12 +48,15 @@ export default function AdminPage() {
             router.push("/")
           }
         } else {
+          console.log("[v0] No session found, redirecting to login")
           router.push("/auth/login?redirect=/admin")
         }
       } catch (err) {
-        console.error("[v0] Auth check failed:", err)
+        console.error("[v0] Admin auth check failed:", err)
+        router.push("/auth/login")
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
     }
 
     checkAuth()

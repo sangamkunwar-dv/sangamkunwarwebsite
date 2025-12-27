@@ -65,6 +65,8 @@ export default function DashboardPage() {
     setSending(true)
 
     try {
+      console.log("[v0] Sending message to database and email")
+      
       const { error } = await supabase.from("messages").insert([
         {
           sender_id: user.id,
@@ -77,14 +79,36 @@ export default function DashboardPage() {
 
       if (error) throw error
 
+      // Also send email notification to admin
+      try {
+        const response = await fetch('/api/send-notification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: user.email,
+            email: user.email,
+            subject,
+            message,
+          }),
+        })
+        
+        if (response.ok) {
+          console.log("[v0] Email notification sent to admin")
+        }
+      } catch (emailError) {
+        console.error("[v0] Email notification failed:", emailError)
+        // Don't fail the message submission if email fails
+      }
+
       toast({
-        title: "Success",
-        description: "Message sent successfully",
+        title: "Message Sent!",
+        description: "Your message has been sent successfully",
       })
       setMessage("")
       setSubject("")
       fetchMessages(user.id)
     } catch (err: any) {
+      console.error("[v0] Message send error:", err)
       toast({
         title: "Error",
         description: err.message,

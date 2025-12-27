@@ -25,6 +25,8 @@ export default function SignupPage() {
     setLoading(true)
 
     try {
+      console.log("[v0] Attempting signup for:", email)
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -32,28 +34,37 @@ export default function SignupPage() {
           data: {
             full_name: fullName,
           },
-          emailRedirectTo: `${window.location.origin}/auth/verify-email`,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       })
 
       if (error) {
+        console.error("[v0] Signup error:", error)
         toast({
-          title: "Error",
+          title: "Signup Failed",
           description: error.message,
           variant: "destructive",
         })
-      } else if (data.user) {
+        return
+      }
+
+      if (data.user) {
+        console.log("[v0] Signup successful, email confirmation required")
         toast({
-          title: "Success",
-          description: "Account created! Check your email to verify your account.",
+          title: "Account Created!",
+          description: "Please check your email and click the verification link to activate your account.",
         })
-        router.push("/auth/verify-email")
+        
+        // Redirect to verification page after a moment
+        setTimeout(() => {
+          router.push("/auth/verify-email")
+        }, 1500)
       }
     } catch (err) {
-      console.error("[v0] Signup error:", err)
+      console.error("[v0] Unexpected signup error:", err)
       toast({
         title: "Error",
-        description: "An error occurred during signup",
+        description: "An unexpected error occurred during signup",
         variant: "destructive",
       })
     } finally {
