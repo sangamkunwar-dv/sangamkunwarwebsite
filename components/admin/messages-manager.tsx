@@ -9,10 +9,10 @@ import { useToast } from "@/hooks/use-toast"
 
 interface Message {
   id: string
-  sender_email: string
+  email: string
   subject: string
   message: string
-  status: "pending" | "approved" | "rejected"
+  status: "pending" | "approved" | "rejected" | "unread" | "read"
   created_at: string
 }
 
@@ -30,8 +30,13 @@ export default function MessagesManager() {
     try {
       const { data, error } = await supabase.from("messages").select("*").order("created_at", { ascending: false })
 
-      if (error) throw error
-      setMessages(data || [])
+      if (error) {
+        const response = await fetch("/api/contact")
+        const result = await response.json()
+        setMessages(result.messages || [])
+      } else {
+        setMessages(data || [])
+      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -118,8 +123,10 @@ export default function MessagesManager() {
                         {msg.status === "approved" && <CheckCircle size={18} className="text-green-500" />}
                         {msg.status === "pending" && <Clock size={18} className="text-yellow-500" />}
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1">From: {msg.sender_email}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{new Date(msg.created_at).toLocaleString()}</p>
+                      <p className="text-sm text-muted-foreground mt-1">From: {msg.email}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(msg.created_at || Date.now()).toLocaleString()}
+                      </p>
                     </div>
                     <div className="flex gap-2">
                       {msg.status === "pending" && (
@@ -131,7 +138,7 @@ export default function MessagesManager() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleReply(msg.sender_email)}
+                        onClick={() => handleReply(msg.email)}
                         className="bg-transparent"
                       >
                         Reply

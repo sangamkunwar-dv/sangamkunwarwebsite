@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
@@ -31,7 +33,7 @@ export default function DashboardPage() {
         router.push("/auth/login")
       } else {
         setUser(session.user)
-        fetchMessages()
+        fetchMessages(session.user.id)
       }
       setLoading(false)
     }
@@ -39,22 +41,19 @@ export default function DashboardPage() {
     checkAuth()
   }, [])
 
-  // Fetch messages from your route.tsx GET API
-  const fetchMessages = async () => {
-    try {
-      const res = await fetch("/api/contact")
-      const data = await res.json()
-      setMessages(data.messages || [])
-    } catch (error) {
-      console.error("Failed to load messages", error)
-    }
+  const fetchMessages = async (userId: string) => {
+    const { data } = await supabase
+      .from("messages")
+      .select("*")
+      .eq("sender_id", userId)
+      .order("created_at", { ascending: false })
+
+    setMessages(data || [])
   }
 
-  // Send message using Resend API (route.tsx)
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    if (!subject.trim() || !message.trim()) {
+    if (!message.trim() || !subject.trim()) {
       toast({
         title: "Error",
         description: "Please fill in all fields",
@@ -66,39 +65,29 @@ export default function DashboardPage() {
     setSending(true)
 
     try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: user.email,
-          email: user.email,
+      const { error } = await supabase.from("messages").insert([
+        {
+          sender_id: user.id,
+          sender_email: user.email,
           subject,
           message,
-        }),
+          status: "pending",
+        },
+      ])
+
+      if (error) throw error
+
+      toast({
+        title: "Success",
+        description: "Message sent successfully",
       })
-
-      const result = await res.json()
-
-      if (result.success) {
-        toast({
-          title: "Success",
-          description: "Message sent successfully!",
-        })
-
-        setSubject("")
-        setMessage("")
-        fetchMessages()
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to send message",
-          variant: "destructive",
-        })
-      }
-    } catch (err) {
+      setMessage("")
+      setSubject("")
+      fetchMessages(user.id)
+    } catch (err: any) {
       toast({
         title: "Error",
-        description: "Something went wrong",
+        description: err.message,
         variant: "destructive",
       })
     } finally {
@@ -132,7 +121,7 @@ export default function DashboardPage() {
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Send Message Form */}
           <Card className="lg:col-span-2 p-6">
-            <h2 className="text-2xl font-bold mb-6">Send Message to Sangam Kunwar</h2>
+            <h2 className="text-2xl font-bold mb-6">Send Message to Sangam</h2>
             <form onSubmit={handleSendMessage} className="space-y-4">
               <div>
                 <label className="text-sm font-medium">Subject</label>
@@ -171,10 +160,10 @@ export default function DashboardPage() {
                 messages.map((msg) => (
                   <div key={msg.id} className="p-3 bg-muted rounded-lg">
                     <p className="text-sm font-medium">{msg.subject}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{msg.email}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {new Date(msg.timestamp).toLocaleString()}
+                      Status: <span className="capitalize">{msg.status}</span>
                     </p>
+                    <p className="text-xs text-muted-foreground">{new Date(msg.created_at).toLocaleDateString()}</p>
                   </div>
                 ))
               )}

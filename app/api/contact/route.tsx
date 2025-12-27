@@ -26,9 +26,9 @@ export async function POST(request: NextRequest) {
 
     messages.push(newMessage)
 
-    const adminEmail = process.env.ADMIN_EMAIL || "sangamkunwar48@gmail.com"
+    const adminEmail = process.env.ADMIN_EMAIL || "sangamkunwae48@gmail.com"
     const resendApiKey = process.env.RESEND_API_KEY
-    const fromEmail = process.env.RESEND_FROM_EMAIL || "noreply@sangamkunwar.com"
+    const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev"
 
     if (resendApiKey) {
       try {
