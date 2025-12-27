@@ -1,7 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { createClient } from "@supabase/supabase-js"
 
 // Store messages in memory (for demo - use database in production)
 let messages: any[] = []
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,7 +31,15 @@ export async function POST(request: NextRequest) {
 
     messages.push(newMessage)
 
-    const adminEmail = process.env.ADMIN_EMAIL || "sangamkunwae48@gmail.com"
+    const { error: dbError } = await supabaseAdmin
+      .from("messages")
+      .insert([{ name, email, subject, message, status: "pending" }])
+
+    if (dbError) {
+      console.error("[v0] Supabase insert error:", dbError)
+    }
+
+    const adminEmail = process.env.ADMIN_EMAIL || "sangamkunwar48@gmail.com"
     const resendApiKey = process.env.RESEND_API_KEY
     const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev"
 
