@@ -44,7 +44,7 @@ export default function LoginPage() {
 
     try {
       console.log("[v0] Attempting login for:", email)
-      
+
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -92,15 +92,12 @@ export default function LoginPage() {
       setTimeout(() => {
         if (email === "sangamkunwar48@gmail.com") {
           console.log("[v0] Redirecting to admin panel")
-          router.push("/admin")
-          router.refresh()
+          window.location.href = "/admin"
         } else {
           console.log("[v0] Redirecting to dashboard")
-          router.push("/dashboard")
-          router.refresh()
+          window.location.href = "/dashboard"
         }
-      }, 500)
-      
+      }, 800)
     } catch (err) {
       console.error("[v0] Unexpected login error:", err)
       toast({

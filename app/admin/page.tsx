@@ -39,17 +39,17 @@ export default function AdminPage() {
             console.log("[v0] Admin access granted")
             setUser(session.user)
           } else {
-            console.warn("[v0] Non-admin user attempted to access admin panel:", session.user.email)
+            console.warn("[v0] Unauthorized access attempt by:", session.user.email)
             toast({
               title: "Access Denied",
-              description: "You do not have administrative privileges.",
+              description: "This area is strictly for the administrator.",
               variant: "destructive",
             })
-            router.push("/")
+            window.location.href = "/"
           }
         } else {
           console.log("[v0] No session found, redirecting to login")
-          router.push("/auth/login?redirect=/admin")
+          window.location.href = "/auth/login?redirect=/admin"
         }
       } catch (err) {
         console.error("[v0] Admin auth check failed:", err)
