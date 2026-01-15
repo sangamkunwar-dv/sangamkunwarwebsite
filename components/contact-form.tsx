@@ -176,23 +176,21 @@ export default function ContactForm() {
               <CardContent className="space-y-6">
                 <div>
                   <h4 className="font-semibold text-foreground mb-2">Email</h4>
-                  <a href="mailto:sangamkunwar48@gmail.com" className="text-primary hover:underline">
-                    sangamkunwar48@gmail.com
+                  <a href="mailto:sangamkunwae48@gmail.com" className="text-primary hover:underline">
+                    sangamkunwae48@gmail.com
                   </a>
                 </div>
 
                 <div>
                   <h4 className="font-semibold text-foreground mb-2">Phone</h4>
-                  <a href="https://wa.me/9779701024066?text=Hello%20Sangam,%20I%20want%20to%20connect%20with%20you" className="text-primary hover:underline">
+                  <a href="tel:+9701024066" className="text-primary hover:underline">
                     +977 9701024066
                   </a>
                 </div>
 
                 <div>
                   <h4 className="font-semibold text-foreground mb-2">Location</h4>
-                  <a href="https://www.google.com/maps/dir/27.6261518,83.5002453/27.6260489,83.5003698/@27.6258962,83.4973139,811m/data=!3m1!1e3!4m4!4m3!1m1!4e1!1m0?entry=ttu&g_ep=EgoyMDI1MTAyOS4yIKXMDSoASAFQAw%3D%3D" className="text-muted-foreground">
-                    Tilottama-8, Rupandehi, Nepal
-                  </a>
+                  <p className="text-muted-foreground">Tilottama-8, Rupandehi, Nepal</p>
                 </div>
 
                 <div>
@@ -215,7 +213,7 @@ export default function ContactForm() {
                       GitHub
                     </a>
                     <a
-                      href="https://www.instagram.com/sangam_____daji/"
+                      href="https://www.instagram.com/sangam_____war/"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="block text-primary hover:underline"
