@@ -22,17 +22,26 @@ export default function LoginPage() {
 
   const handleOAuthLogin = async (provider: "github" | "google") => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback`,
         },
       })
-      if (error) throw error
+
+      if (error) {
+        console.error("[v0] OAuth Error:", error)
+        throw error
+      }
+
+      if (!data?.url) {
+        throw new Error(`${provider} OAuth redirect URL not generated. Check Supabase OAuth settings.`)
+      }
     } catch (err: any) {
+      console.error("[v0] OAuth Login Error:", err.message)
       toast({
-        title: "OAuth Error",
-        description: err.message,
+        title: `${provider.charAt(0).toUpperCase() + provider.slice(1)} Login Failed`,
+        description: err.message || `Unable to connect to ${provider}. Please try again or use email login.`,
         variant: "destructive",
       })
     }
@@ -77,7 +86,6 @@ export default function LoginPage() {
         toast({
           title: "Email Not Verified",
           description: "Please verify your email before logging in. Check your inbox for the verification link.",
-          variant: "destructive",
         })
         await supabase.auth.signOut()
         return
