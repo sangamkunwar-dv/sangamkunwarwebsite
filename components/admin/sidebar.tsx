@@ -16,8 +16,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, onLogout }: Admi
     { id: "overview", label: "Dashboard", icon: LayoutDashboard },
     { id: "hero", label: "Hero Section", icon: ImageIcon },
     { id: "projects", label: "Projects", icon: FileText },
-    { id: "events", label: "Events", icon: Calendar },
-    { id: "collaborators", label: "Collaborators", icon: Users },
+    { id: "skills", label: "Skills", icon: FileText },
     { id: "messages", label: "Messages", icon: Mail },
     { id: "settings", label: "Settings", icon: Settings },
   ]

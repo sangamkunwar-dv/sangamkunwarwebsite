@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import AdminSidebar from "@/components/admin/sidebar"
 import ProjectsManager from "@/components/admin/projects-manager"
+import SkillsManager from "@/components/admin/skills-manager"
 import EventsManager from "@/components/admin/events-manager"
 import CollaboratorsManager from "@/components/admin/collaborators-manager"
 import DashboardOverview from "@/components/admin/dashboard-overview"
@@ -13,7 +14,7 @@ import HeroSettings from "@/components/admin/hero-settings"
 import { useToast } from "@/hooks/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
 
-type AdminTab = "overview" | "hero" | "projects" | "events" | "collaborators" | "messages" | "settings"
+type AdminTab = "overview" | "hero" | "projects" | "skills" | "events" | "collaborators" | "messages" | "settings"
 
 const ADMIN_EMAIL = "sangamkunwar48@gmail.com"
 
@@ -89,6 +90,7 @@ export default function AdminPage() {
           {activeTab === "overview" && <DashboardOverview />}
           {activeTab === "hero" && <HeroSettings />}
           {activeTab === "projects" && <ProjectsManager />}
+          {activeTab === "skills" && <SkillsManager />}
           {activeTab === "events" && <EventsManager />}
           {activeTab === "collaborators" && <CollaboratorsManager />}
           {activeTab === "messages" && <MessagesManager />}
