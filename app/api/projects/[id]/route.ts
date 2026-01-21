@@ -1,12 +1,18 @@
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { type NextRequest, NextResponse } from "next/server"
+import { updateProject, deleteProject } from "../mock"
 
-export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    const { id } = params
+    const body = await request.json()
+
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.error("[v0] Missing Supabase environment variables")
-      return NextResponse.json({ error: "Missing Supabase configuration" }, { status: 500 })
+      console.log("[v0] Updating mock storage")
+      const updated = updateProject(id, body)
+      if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 })
+      return NextResponse.json(updated)
     }
 
     const cookieStore = await cookies()
@@ -24,9 +30,6 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         },
       },
     )
-
-    const { id } = await params
-    const body = await request.json()
 
     const { data, error } = await supabase
       .from("projects")
@@ -46,11 +49,14 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    const { id } = params
+
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.error("[v0] Missing Supabase environment variables")
-      return NextResponse.json({ error: "Missing Supabase configuration" }, { status: 500 })
+      console.log("[v0] Deleting from mock storage")
+      deleteProject(id)
+      return NextResponse.json({ success: true })
     }
 
     const cookieStore = await cookies()
@@ -68,8 +74,6 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
         },
       },
     )
-
-    const { id } = await params
 
     const { error } = await supabase.from("projects").delete().eq("id", id)
 

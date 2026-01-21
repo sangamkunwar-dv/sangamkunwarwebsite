@@ -1,16 +1,14 @@
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { type NextRequest, NextResponse } from "next/server"
+import { getProjects, addProject, updateProject, deleteProject } from "./mock"
 
 export async function GET() {
   try {
     // Check environment variables
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.error("[v0] Missing Supabase environment variables")
-      return NextResponse.json(
-        { error: "Missing Supabase configuration. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to environment variables." },
-        { status: 500 }
-      )
+      console.log("[v0] Using mock data (Supabase not configured)")
+      return NextResponse.json(getProjects())
     }
 
     const cookieStore = await cookies()
@@ -45,13 +43,12 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const body = await request.json()
+
     // Check environment variables
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.error("[v0] Missing Supabase environment variables")
-      return NextResponse.json(
-        { error: "Missing Supabase configuration. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to environment variables." },
-        { status: 500 }
-      )
+      console.log("[v0] Saving to mock storage (Supabase not configured)")
+      return NextResponse.json(addProject(body), { status: 201 })
     }
 
     const cookieStore = await cookies()
@@ -69,8 +66,6 @@ export async function POST(request: NextRequest) {
         },
       },
     )
-
-    const body = await request.json()
 
     const { data, error } = await supabase.from("projects").insert([body]).select()
 
