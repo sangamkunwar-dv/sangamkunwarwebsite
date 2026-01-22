@@ -1,0 +1,140 @@
+==========================================
+MONGODB SETUP - QUICK REFERENCE
+==========================================
+
+WHAT YOU NEED TO DO (10 MINUTES):
+
+1. CREATE ACCOUNT
+   Go to: https://www.mongodb.com/cloud/atlas
+   Sign up → Create account
+
+2. CREATE CLUSTER
+   Click "Create a Deployment"
+   Choose M0 (FREE tier)
+   Wait 3-5 minutes
+
+3. CREATE DATABASE
+   Name: portfolio
+   Collections:
+   - projects
+   - hero_settings
+   - skills
+
+4. GET CONNECTION STRING
+   Click "Connect" → "Drivers" → Copy URL
+   Format: mongodb+srv://user:pass@cluster...
+
+5. REPLACE CREDENTIALS
+   Username: your_username
+   Password: your_password
+   Example: 
+   mongodb+srv://portfolio:MyPassword123@my-cluster.mongodb.net/portfolio?retryWrites=true&w=majority
+
+6. ADD TO NETLIFY
+   Site Settings → Build & deploy → Environment
+   Add: MONGODB_URI = [paste connection string]
+
+7. REDEPLOY
+   Netlify → Deployments → Trigger deploy
+
+8. TEST
+   Admin → Add project → Save
+   Check MongoDB Atlas to see data
+   Website → Refresh → See new project
+
+==========================================
+
+MONGODB CONNECTION STRING PARTS:
+mongodb+srv://   <- Protocol
+username:        <- MongoDB user
+password@        <- MongoDB password
+cluster.mdb...   <- Cluster name
+/portfolio       <- Database name
+
+==========================================
+
+SAMPLE DATA STRUCTURE:
+
+PROJECTS:
+{
+  title: "My Project",
+  description: "Description",
+  tech_stack: ["Next.js", "MongoDB"],
+  image_url: "https://...",
+  github_link: "https://...",
+  live_link: "https://...",
+  created_at: ISODate(),
+  updated_at: ISODate()
+}
+
+HERO_SETTINGS:
+{
+  title: "Your Name",
+  subtitle: "Your Title",
+  description: "Your Bio",
+  photo_url: "https://...",
+  logo_url: "https://...",
+  created_at: ISODate(),
+  updated_at: ISODate()
+}
+
+SKILLS:
+{
+  category: "Frontend",
+  items: ["React", "Next.js"],
+  created_at: ISODate(),
+  updated_at: ISODate()
+}
+
+==========================================
+
+ENVIRONMENT VARIABLE TO ADD:
+
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/portfolio?retryWrites=true&w=majority
+
+==========================================
+
+HOW YOUR SYSTEM WORKS:
+
+1. Admin Panel Form
+   ↓
+2. Save Button
+   ↓
+3. API Route (/api/projects)
+   ↓
+4. MongoDB Database
+   ↓
+5. Website Loads Data
+   ↓
+6. Shows on Website
+
+DELETE WORKS THE SAME:
+Admin Delete → API → MongoDB Deletes → Website Updates
+
+==========================================
+
+TROUBLESHOOTING:
+
+Issue: "MONGODB_URI not found"
+Fix: Add to Netlify env vars and redeploy
+
+Issue: "Connection refused"
+Fix: Add your IP to MongoDB whitelist
+
+Issue: "Auth failed"
+Fix: Check username/password in connection string
+
+Issue: "Database doesn't exist"
+Fix: Create database named "portfolio" in MongoDB
+
+==========================================
+
+IMPORTANT LINKS:
+
+MongoDB Atlas: https://www.mongodb.com/cloud/atlas
+MongoDB Docs: https://docs.mongodb.com
+Your Netlify: https://app.netlify.com
+
+==========================================
+
+ALL DONE! Your admin panel + website + MongoDB are connected!
