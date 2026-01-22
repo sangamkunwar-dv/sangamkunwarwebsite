@@ -1,103 +1,74 @@
-import { createServerClient } from "@supabase/ssr"
-import { cookies } from "next/headers"
+import { MongoClient } from "mongodb"
 import { type NextRequest, NextResponse } from "next/server"
+import { cookies } from "next/headers"
+import { createServerClient } from "@supabase/supabase-js"
+
+const MONGODB_URI = process.env.MONGODB_URI || ""
+
+async function connectToDatabase() {
+  if (!MONGODB_URI) {
+    throw new Error("MONGODB_URI is not configured")
+  }
+  const client = new MongoClient(MONGODB_URI)
+  await client.connect()
+  return client
+}
 
 export async function GET() {
+  let client
   try {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.error("[v0] Missing Supabase environment variables")
-      return NextResponse.json(
-        { error: "Missing Supabase configuration" },
-        { status: 500 }
-      )
-    }
+    console.log("[v0] Fetching hero settings from MongoDB...")
+    client = await connectToDatabase()
+    const db = client.db("portfolio")
 
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-          },
-        },
-      },
-    )
+    const settings = await db.collection("hero_settings").findOne()
 
-    const { data, error } = await supabase.from("hero_settings").select("*").limit(1).single()
-
-    if (error && error.code !== "PGRST116") {
-      console.error("[v0] Database error:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    return NextResponse.json(data || {})
+    return NextResponse.json(settings || {})
   } catch (err) {
-    console.error("[v0] API error:", err)
-    return NextResponse.json({ error: String(err) }, { status: 500 })
+    console.error("[v0] Error fetching hero settings:", err)
+    return NextResponse.json({}, { status: 200 })
+  } finally {
+    if (client) {
+      await client.close()
+    }
   }
 }
 
 export async function PUT(request: NextRequest) {
+  let client
   try {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.error("[v0] Missing Supabase environment variables")
-      return NextResponse.json(
-        { error: "Missing Supabase configuration" },
-        { status: 500 }
-      )
-    }
-
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-          },
-        },
-      },
-    )
-
     const body = await request.json()
+    console.log("[v0] Updating hero settings in MongoDB...")
 
-    // Get existing record to update
-    const { data: existing } = await supabase.from("hero_settings").select("id").limit(1).single()
+    client = await connectToDatabase()
+    const db = client.db("portfolio")
+
+    const existing = await db.collection("hero_settings").findOne()
 
     if (existing) {
-      const { data, error } = await supabase
-        .from("hero_settings")
-        .update({ ...body, updated_at: new Date().toISOString() })
-        .eq("id", existing.id)
-        .select()
+      await db.collection("hero_settings").updateOne(
+        { _id: existing._id },
+        { $set: { ...body, updated_at: new Date() } }
+      )
 
-      if (error) {
-        console.error("[v0] Database error:", error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
-      }
-
-      return NextResponse.json(data[0])
+      const updated = await db.collection("hero_settings").findOne({ _id: existing._id })
+      return NextResponse.json(updated)
     } else {
-      const { data, error } = await supabase.from("hero_settings").insert([body]).select()
+      const result = await db.collection("hero_settings").insertOne({
+        ...body,
+        created_at: new Date(),
+        updated_at: new Date(),
+      })
 
-      if (error) {
-        console.error("[v0] Database error:", error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
-      }
-
-      return NextResponse.json(data[0], { status: 201 })
+      const inserted = await db.collection("hero_settings").findOne({ _id: result.insertedId })
+      return NextResponse.json(inserted, { status: 201 })
     }
   } catch (err) {
-    console.error("[v0] API error:", err)
+    console.error("[v0] Error updating hero settings:", err)
     return NextResponse.json({ error: String(err) }, { status: 500 })
+  } finally {
+    if (client) {
+      await client.close()
+    }
   }
 }

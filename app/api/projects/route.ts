@@ -1,82 +1,78 @@
-import { createServerClient } from "@supabase/ssr"
-import { cookies } from "next/headers"
+import { MongoClient } from "mongodb"
 import { type NextRequest, NextResponse } from "next/server"
-import { getProjects, addProject, updateProject, deleteProject } from "./mock"
+
+const MONGODB_URI = process.env.MONGODB_URI || ""
+
+async function connectToDatabase() {
+  if (!MONGODB_URI) {
+    throw new Error("MONGODB_URI is not configured")
+  }
+  const client = new MongoClient(MONGODB_URI)
+  await client.connect()
+  return client
+}
 
 export async function GET() {
+  let client
   try {
-    // Check environment variables
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.log("[v0] Using mock data (Supabase not configured)")
-      return NextResponse.json(getProjects())
-    }
+    console.log("[v0] Fetching projects from MongoDB...")
+    client = await connectToDatabase()
+    const db = client.db("portfolio")
 
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-          },
-        },
-      },
-    )
+    const projects = await db
+      .collection("projects")
+      .find()
+      .sort({ created_at: -1 })
+      .toArray()
 
-    const { data, error } = await supabase.from("projects").select("*").order("created_at", { ascending: false })
+    const serialized = projects.map((p: any) => ({
+      ...p,
+      id: p._id.toString(),
+      _id: undefined,
+    }))
 
-    if (error) {
-      console.error("[v0] Database error:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    return NextResponse.json(data || [])
+    return NextResponse.json(serialized)
   } catch (err) {
-    console.error("[v0] API error:", err)
-    return NextResponse.json({ error: String(err) }, { status: 500 })
+    console.error("[v0] Error fetching projects:", err)
+    return NextResponse.json([], { status: 200 })
+  } finally {
+    if (client) {
+      await client.close()
+    }
   }
 }
 
 export async function POST(request: NextRequest) {
+  let client
   try {
     const body = await request.json()
+    console.log("[v0] Creating project in MongoDB...")
 
-    // Check environment variables
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.log("[v0] Saving to mock storage (Supabase not configured)")
-      return NextResponse.json(addProject(body), { status: 201 })
-    }
+    client = await connectToDatabase()
+    const db = client.db("portfolio")
 
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    const result = await db.collection("projects").insertOne({
+      ...body,
+      created_at: new Date(),
+      updated_at: new Date(),
+    })
+
+    const project = await db.collection("projects").findOne({ _id: result.insertedId })
+
+    return NextResponse.json(
       {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-          },
-        },
+        ...project,
+        id: project?._id.toString(),
+        _id: undefined,
       },
+      { status: 201 }
     )
-
-    const { data, error } = await supabase.from("projects").insert([body]).select()
-
-    if (error) {
-      console.error("[v0] Database error:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    return NextResponse.json(data[0], { status: 201 })
   } catch (err) {
-    console.error("[v0] API error:", err)
+    console.error("[v0] Error creating project:", err)
     return NextResponse.json({ error: String(err) }, { status: 500 })
+  } finally {
+    if (client) {
+      await client.close()
+    }
   }
 }

@@ -1,79 +1,78 @@
-import { createServerClient } from "@supabase/ssr"
-import { cookies } from "next/headers"
+import { MongoClient } from "mongodb"
 import { type NextRequest, NextResponse } from "next/server"
 
+const MONGODB_URI = process.env.MONGODB_URI || ""
+
+async function connectToDatabase() {
+  if (!MONGODB_URI) {
+    throw new Error("MONGODB_URI is not configured")
+  }
+  const client = new MongoClient(MONGODB_URI)
+  await client.connect()
+  return client
+}
+
 export async function GET() {
+  let client
   try {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.error("[v0] Missing Supabase environment variables")
-      return NextResponse.json([], { status: 200 })
-    }
+    console.log("[v0] Fetching skills from MongoDB...")
+    client = await connectToDatabase()
+    const db = client.db("portfolio")
 
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-          },
-        },
-      },
-    )
+    const skills = await db
+      .collection("skills")
+      .find()
+      .sort({ updated_at: -1 })
+      .toArray()
 
-    const { data, error } = await supabase.from("skills").select("*").order("updated_at", { ascending: false })
+    const serialized = skills.map((s: any) => ({
+      ...s,
+      id: s._id.toString(),
+      _id: undefined,
+    }))
 
-    if (error) {
-      console.error("[v0] Database error:", error)
-      return NextResponse.json([], { status: 200 })
-    }
-
-    return NextResponse.json(data || [])
+    return NextResponse.json(serialized)
   } catch (err) {
-    console.error("[v0] API error:", err)
+    console.error("[v0] Error fetching skills:", err)
     return NextResponse.json([], { status: 200 })
+  } finally {
+    if (client) {
+      await client.close()
+    }
   }
 }
 
 export async function POST(request: NextRequest) {
+  let client
   try {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.error("[v0] Missing Supabase environment variables")
-      return NextResponse.json({ error: "Missing Supabase configuration" }, { status: 500 })
-    }
-
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-          },
-        },
-      },
-    )
-
     const body = await request.json()
+    console.log("[v0] Creating skill in MongoDB...")
 
-    const { data, error } = await supabase.from("skills").insert([body]).select()
+    client = await connectToDatabase()
+    const db = client.db("portfolio")
 
-    if (error) {
-      console.error("[v0] Database error:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
+    const result = await db.collection("skills").insertOne({
+      ...body,
+      created_at: new Date(),
+      updated_at: new Date(),
+    })
 
-    return NextResponse.json(data[0], { status: 201 })
+    const skill = await db.collection("skills").findOne({ _id: result.insertedId })
+
+    return NextResponse.json(
+      {
+        ...skill,
+        id: skill?._id.toString(),
+        _id: undefined,
+      },
+      { status: 201 }
+    )
   } catch (err) {
-    console.error("[v0] API error:", err)
+    console.error("[v0] Error creating skill:", err)
     return NextResponse.json({ error: String(err) }, { status: 500 })
+  } finally {
+    if (client) {
+      await client.close()
+    }
   }
 }

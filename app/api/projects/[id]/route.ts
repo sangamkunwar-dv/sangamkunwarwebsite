@@ -1,90 +1,77 @@
-import { createServerClient } from "@supabase/ssr"
-import { cookies } from "next/headers"
+import { MongoClient, ObjectId } from "mongodb"
 import { type NextRequest, NextResponse } from "next/server"
-import { updateProject, deleteProject } from "../mock"
+
+const MONGODB_URI = process.env.MONGODB_URI || ""
+
+async function connectToDatabase() {
+  if (!MONGODB_URI) {
+    throw new Error("MONGODB_URI is not configured")
+  }
+  const client = new MongoClient(MONGODB_URI)
+  await client.connect()
+  return client
+}
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+  let client
   try {
     const { id } = params
     const body = await request.json()
+    console.log("[v0] Updating project in MongoDB...")
 
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.log("[v0] Updating mock storage")
-      const updated = updateProject(id, body)
-      if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 })
-      return NextResponse.json(updated)
-    }
+    client = await connectToDatabase()
+    const db = client.db("portfolio")
 
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-          },
-        },
-      },
+    const result = await db.collection("projects").updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { ...body, updated_at: new Date() } }
     )
 
-    const { data, error } = await supabase
-      .from("projects")
-      .update({ ...body, updated_at: new Date().toISOString() })
-      .eq("id", id)
-      .select()
-
-    if (error) {
-      console.error("[v0] Database error:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (result.matchedCount === 0) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 })
     }
 
-    return NextResponse.json(data[0])
+    const project = await db.collection("projects").findOne({ _id: new ObjectId(id) })
+
+    return NextResponse.json({
+      ...project,
+      id: project?._id.toString(),
+      _id: undefined,
+    })
   } catch (err) {
-    console.error("[v0] API error:", err)
+    console.error("[v0] Error updating project:", err)
     return NextResponse.json({ error: String(err) }, { status: 500 })
+  } finally {
+    if (client) {
+      await client.close()
+    }
   }
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+  let client
   try {
     const { id } = params
+    console.log("[v0] Deleting project from MongoDB...")
 
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.log("[v0] Deleting from mock storage")
-      deleteProject(id)
-      return NextResponse.json({ success: true })
-    }
+    client = await connectToDatabase()
+    const db = client.db("portfolio")
 
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-          },
-        },
-      },
-    )
+    const result = await db.collection("projects").deleteOne({
+      _id: new ObjectId(id),
+    })
 
-    const { error } = await supabase.from("projects").delete().eq("id", id)
-
-    if (error) {
-      console.error("[v0] Database error:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (result.deletedCount === 0) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 })
     }
 
     return NextResponse.json({ success: true })
   } catch (err) {
-    console.error("[v0] API error:", err)
+    console.error("[v0] Error deleting project:", err)
     return NextResponse.json({ error: String(err) }, { status: 500 })
+  } finally {
+    if (client) {
+      await client.close()
+    }
   }
 }

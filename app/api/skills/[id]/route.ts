@@ -1,86 +1,77 @@
-import { createServerClient } from "@supabase/ssr"
-import { cookies } from "next/headers"
+import { MongoClient, ObjectId } from "mongodb"
 import { type NextRequest, NextResponse } from "next/server"
 
+const MONGODB_URI = process.env.MONGODB_URI || ""
+
+async function connectToDatabase() {
+  if (!MONGODB_URI) {
+    throw new Error("MONGODB_URI is not configured")
+  }
+  const client = new MongoClient(MONGODB_URI)
+  await client.connect()
+  return client
+}
+
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  let client
   try {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.error("[v0] Missing Supabase environment variables")
-      return NextResponse.json({ error: "Missing Supabase configuration" }, { status: 500 })
-    }
-
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-          },
-        },
-      },
-    )
-
     const { id } = await params
     const body = await request.json()
+    console.log("[v0] Updating skill in MongoDB...")
 
-    const { data, error } = await supabase
-      .from("skills")
-      .update({ ...body, updated_at: new Date().toISOString() })
-      .eq("id", id)
-      .select()
+    client = await connectToDatabase()
+    const db = client.db("portfolio")
 
-    if (error) {
-      console.error("[v0] Database error:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    const result = await db.collection("skills").updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { ...body, updated_at: new Date() } }
+    )
+
+    if (result.matchedCount === 0) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 })
     }
 
-    return NextResponse.json(data[0])
+    const skill = await db.collection("skills").findOne({ _id: new ObjectId(id) })
+
+    return NextResponse.json({
+      ...skill,
+      id: skill?._id.toString(),
+      _id: undefined,
+    })
   } catch (err) {
-    console.error("[v0] API error:", err)
+    console.error("[v0] Error updating skill:", err)
     return NextResponse.json({ error: String(err) }, { status: 500 })
+  } finally {
+    if (client) {
+      await client.close()
+    }
   }
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  let client
   try {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.error("[v0] Missing Supabase environment variables")
-      return NextResponse.json({ error: "Missing Supabase configuration" }, { status: 500 })
-    }
-
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-          },
-        },
-      },
-    )
-
     const { id } = await params
+    console.log("[v0] Deleting skill from MongoDB...")
 
-    const { error } = await supabase.from("skills").delete().eq("id", id)
+    client = await connectToDatabase()
+    const db = client.db("portfolio")
 
-    if (error) {
-      console.error("[v0] Database error:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    const result = await db.collection("skills").deleteOne({
+      _id: new ObjectId(id),
+    })
+
+    if (result.deletedCount === 0) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 })
     }
 
     return NextResponse.json({ success: true })
   } catch (err) {
-    console.error("[v0] API error:", err)
+    console.error("[v0] Error deleting skill:", err)
     return NextResponse.json({ error: String(err) }, { status: 500 })
+  } finally {
+    if (client) {
+      await client.close()
+    }
   }
 }
