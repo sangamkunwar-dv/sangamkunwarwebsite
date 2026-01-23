@@ -1,7 +1,7 @@
 import { MongoClient } from "mongodb"
 import { cookies } from "next/headers"
 import { NextRequest, NextResponse } from "next/server"
-import * as bcrypt from "bcrypt"
+import bcrypt from "bcryptjs"
 
 const MONGODB_URI = process.env.MONGODB_URI || ""
 
