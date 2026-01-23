@@ -15,6 +15,11 @@ async function connectToDatabase() {
 export async function GET() {
   let client
   try {
+    if (!MONGODB_URI) {
+      console.log("[v0] MONGODB_URI not configured - returning empty array")
+      return NextResponse.json([])
+    }
+
     console.log("[v0] Fetching skills from MongoDB...")
     client = await connectToDatabase()
     const db = client.db("portfolio")
@@ -31,6 +36,7 @@ export async function GET() {
       _id: undefined,
     }))
 
+    console.log(`[v0] Found ${serialized.length} skills`)
     return NextResponse.json(serialized)
   } catch (err) {
     console.error("[v0] Error fetching skills:", err)
@@ -46,6 +52,15 @@ export async function POST(request: NextRequest) {
   let client
   try {
     const body = await request.json()
+
+    if (!MONGODB_URI) {
+      console.error("[v0] MONGODB_URI not configured")
+      return NextResponse.json(
+        { error: "MongoDB not configured. Please set MONGODB_URI environment variable." },
+        { status: 500 }
+      )
+    }
+
     console.log("[v0] Creating skill in MongoDB...")
 
     client = await connectToDatabase()
@@ -59,6 +74,7 @@ export async function POST(request: NextRequest) {
 
     const skill = await db.collection("skills").findOne({ _id: result.insertedId })
 
+    console.log("[v0] Skill created successfully:", result.insertedId)
     return NextResponse.json(
       {
         ...skill,

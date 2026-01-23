@@ -17,8 +17,16 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const { id } = await params
     const body = await request.json()
-    console.log("[v0] Updating skill in MongoDB...")
 
+    if (!MONGODB_URI) {
+      console.error("[v0] MONGODB_URI not configured")
+      return NextResponse.json(
+        { error: "MongoDB not configured. Please set MONGODB_URI environment variable." },
+        { status: 500 }
+      )
+    }
+
+    console.log("[v0] Updating skill in MongoDB...")
     client = await connectToDatabase()
     const db = client.db("portfolio")
 
@@ -33,6 +41,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     const skill = await db.collection("skills").findOne({ _id: new ObjectId(id) })
 
+    console.log("[v0] Skill updated successfully")
     return NextResponse.json({
       ...skill,
       id: skill?._id.toString(),
@@ -52,8 +61,16 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   let client
   try {
     const { id } = await params
-    console.log("[v0] Deleting skill from MongoDB...")
 
+    if (!MONGODB_URI) {
+      console.error("[v0] MONGODB_URI not configured")
+      return NextResponse.json(
+        { error: "MongoDB not configured. Please set MONGODB_URI environment variable." },
+        { status: 500 }
+      )
+    }
+
+    console.log("[v0] Deleting skill from MongoDB...")
     client = await connectToDatabase()
     const db = client.db("portfolio")
 
@@ -65,6 +82,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       return NextResponse.json({ error: "Not found" }, { status: 404 })
     }
 
+    console.log("[v0] Skill deleted successfully")
     return NextResponse.json({ success: true })
   } catch (err) {
     console.error("[v0] Error deleting skill:", err)
