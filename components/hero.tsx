@@ -55,7 +55,13 @@ export default function Hero() {
   }
 
   if (!hero) {
-    return null
+    return (
+      <section className="py-20 sm:py-32 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground">Unable to load hero settings</p>
+        </div>
+      </section>
+    )
   }
 
   return (
